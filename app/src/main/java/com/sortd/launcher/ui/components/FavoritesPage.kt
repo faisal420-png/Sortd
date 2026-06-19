@@ -2,6 +2,7 @@ package com.sortd.launcher.ui.components
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -38,18 +39,8 @@ fun FavoritesPage(
     val favorites by viewModel.favorites.collectAsState()
     val installedApps by viewModel.installedApps.collectAsState()
 
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(horizontal = 16.dp)
-    ) {
-        Text(
-            text = "Favorites",
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onBackground
-        )
-
+    Column(modifier = modifier.fillMaxSize().padding(horizontal = 16.dp)) {
+        Text(text = "Favorites", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
         Spacer(modifier = Modifier.height(16.dp))
 
         LazyVerticalGrid(
@@ -58,22 +49,12 @@ fun FavoritesPage(
             verticalArrangement = Arrangement.spacedBy(8.dp),
             modifier = Modifier.fillMaxSize()
         ) {
-            // Show up to 6 favorites
             items(favorites.take(6)) { fav ->
-                FavoriteAppItem(
-                    favoriteEntity = fav,
-                    allApps = installedApps,
-                    onAppClick = onAppClick,
-                    onRemove = { viewModel.removeFavorite(fav.packageName) }
-                )
+                FavoriteAppItem(favoriteEntity = fav, allApps = installedApps, onAppClick = onAppClick, onRemove = { viewModel.removeFavorite(fav.packageName) })
             }
-
-            // Add placeholder items (up to 6)
             val remainingSlots = (6 - favorites.size).coerceAtLeast(0)
             if (remainingSlots > 0) {
-                items(remainingSlots) {
-                    AddFavoriteSlot(onClick = onAddFavorite)
-                }
+                items(remainingSlots) { AddFavoriteSlot(onClick = onAddFavorite) }
             }
         }
     }
@@ -93,98 +74,48 @@ fun FavoriteAppItem(
 
     Box(modifier = modifier) {
         Surface(
-            onClick = { onAppClick(favoriteEntity.packageName) },
-            onLongClick = { showRemove = !showRemove },
             shape = RoundedCornerShape(16.dp),
             color = MaterialTheme.colorScheme.surface,
             tonalElevation = 2.dp,
-            modifier = Modifier.aspectRatio(1f)
+            modifier = Modifier.aspectRatio(1f).combinedClickable(
+                onClick = { onAppClick(favoriteEntity.packageName) },
+                onLongClick = { showRemove = !showRemove }
+            )
         ) {
-            Column(
-                modifier = Modifier.fillMaxSize().padding(8.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
+            Column(modifier = Modifier.fillMaxSize().padding(8.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
                 if (app?.icon != null) {
-                    androidx.compose.foundation.Image(
-                        bitmap = app.icon.toBitmap().asImageBitmap(),
-                        contentDescription = app.appName,
-                        modifier = Modifier
-                            .size(40.dp)
-                            .clip(CircleShape)
-                    )
+                    androidx.compose.foundation.Image(bitmap = app.icon.toBitmap().asImageBitmap(), contentDescription = app.appName, modifier = Modifier.size(40.dp).clip(CircleShape))
                 } else {
-                    Box(
-                        modifier = Modifier
-                            .size(40.dp)
-                            .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.primaryContainer),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = (app?.appName?.firstOrNull() ?: '?').toString(),
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
+                    Box(modifier = Modifier.size(40.dp).clip(CircleShape).background(MaterialTheme.colorScheme.primaryContainer), contentAlignment = Alignment.Center) {
+                        Text(text = (app?.appName?.firstOrNull() ?: '?').toString(), style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onPrimaryContainer)
                     }
                 }
                 Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = app?.appName ?: favoriteEntity.packageName,
-                    style = MaterialTheme.typography.labelSmall,
-                    textAlign = TextAlign.Center,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
+                Text(text = app?.appName ?: favoriteEntity.packageName, style = MaterialTheme.typography.labelSmall, textAlign = TextAlign.Center, maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
         }
 
-        // Remove button
         if (showRemove) {
             IconButton(
-                onClick = {
-                    onRemove()
-                    showRemove = false
-                },
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .size(24.dp)
-                    .background(Color.Black.copy(alpha = 0.6f), CircleShape)
+                onClick = { onRemove(); showRemove = false },
+                modifier = Modifier.align(Alignment.TopEnd).size(24.dp).background(Color.Black.copy(alpha = 0.6f), CircleShape)
             ) {
-                Icon(
-                    imageVector = Icons.Default.Close,
-                    contentDescription = "Remove",
-                    tint = Color.White,
-                    modifier = Modifier.size(16.dp)
-                )
+                Icon(imageVector = Icons.Default.Close, contentDescription = "Remove", tint = Color.White, modifier = Modifier.size(16.dp))
             }
         }
     }
 }
 
 @Composable
-fun AddFavoriteSlot(
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
+fun AddFavoriteSlot(onClick: () -> Unit, modifier: Modifier = Modifier) {
     Surface(
         onClick = onClick,
         shape = RoundedCornerShape(16.dp),
         color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
         modifier = modifier.aspectRatio(1f)
     ) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = "Add App",
-                    modifier = Modifier.size(32.dp),
-                    tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
-                )
-            }
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Icon(imageVector = Icons.Default.Add, contentDescription = "Add App", modifier = Modifier.size(32.dp), tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f))
         }
     }
 }
