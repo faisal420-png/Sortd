@@ -71,7 +71,7 @@ fun NoteItem(note: Note, onContentChange: (String) -> Unit, onDelete: () -> Unit
     }
 
     SwipeToDismissBox(
-        state = rememberSwipeToDismissBoxState(confirmValueChange = { value -> value == SwipeToDismissBoxValue.EndToStart.also { if (it) onDelete() } }),
+        state = rememberSwipeToDismissBoxState(confirmValueChange = { value -> if (value == SwipeToDismissBoxValue.EndToStart) { onDelete(); true } else false }),
         backgroundContent = {
             Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.errorContainer, RoundedCornerShape(12.dp)).padding(horizontal = 20.dp), contentAlignment = Alignment.CenterEnd) {
                 Icon(imageVector = Icons.Default.Delete, contentDescription = "Delete", tint = MaterialTheme.colorScheme.onErrorContainer)
