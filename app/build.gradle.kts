@@ -68,6 +68,12 @@ dependencies {
     // Coil for images
     implementation("io.coil-kt:coil-compose:2.5.0")
 
+    // Jsoup for og:meta scraping
+    implementation("org.jsoup:jsoup:1.17.2")
+
+    // Coroutines
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
+
     // Tests
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
