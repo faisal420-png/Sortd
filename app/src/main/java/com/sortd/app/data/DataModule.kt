@@ -15,8 +15,13 @@ object DataModule {
 
     @Provides @Singleton
     fun provideDb(@ApplicationContext ctx: Context): SortdDb =
-        Room.databaseBuilder(ctx, SortdDb::class.java, "sortd.db").build()
+        Room.databaseBuilder(ctx, SortdDb::class.java, "sortd.db")
+            .fallbackToDestructiveMigration()
+            .build()
 
     @Provides @Singleton
     fun provideLinkDao(db: SortdDb): SavedLinkDao = db.links()
+
+    @Provides @Singleton
+    fun provideFolderDao(db: SortdDb): FolderDao = db.folders()
 }

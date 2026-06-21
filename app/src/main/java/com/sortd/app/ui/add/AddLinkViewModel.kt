@@ -1,9 +1,9 @@
-package com.sortd.app.ui
+package com.sortd.app.ui.add
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.sortd.app.data.Folder
 import com.sortd.app.data.LinkRepository
-import com.sortd.app.data.SavedLink
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -13,39 +13,35 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-data class HomeUiState(
+data class AddLinkState(
     val isSaving: Boolean = false,
+    val done: Boolean = false,
     val error: String? = null
 )
 
 @HiltViewModel
-class HomeViewModel @Inject constructor(
+class AddLinkViewModel @Inject constructor(
     private val repo: LinkRepository
 ) : ViewModel() {
 
-    val links: StateFlow<List<SavedLink>> = repo.observeAll()
+    val folders: StateFlow<List<Folder>> = repo.observeFolders()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
-    private val _uiState = MutableStateFlow(HomeUiState())
-    val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
+    private val _state = MutableStateFlow(AddLinkState())
+    val state: StateFlow<AddLinkState> = _state.asStateFlow()
 
-    fun save(url: String) {
+    fun save(url: String, folderId: Long?) {
         if (url.isBlank()) return
-        _uiState.value = _uiState.value.copy(isSaving = true, error = null)
+        _state.value = AddLinkState(isSaving = true)
         viewModelScope.launch {
-            val result = repo.saveLink(url)
-            _uiState.value = HomeUiState(
+            val result = repo.saveLink(url, folderId)
+            _state.value = AddLinkState(
                 isSaving = false,
+                done = result.isSuccess,
                 error = result.exceptionOrNull()?.message
             )
         }
     }
 
-    fun delete(id: Long) {
-        viewModelScope.launch { repo.delete(id) }
-    }
-
-    fun clearError() {
-        _uiState.value = _uiState.value.copy(error = null)
-    }
+    fun reset() { _state.value = AddLinkState() }
 }

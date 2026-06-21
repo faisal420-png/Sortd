@@ -6,7 +6,11 @@ import org.jsoup.Jsoup
 import javax.inject.Inject
 import javax.inject.Singleton
 
-data class LinkMetadata(val title: String?, val imageUrl: String?)
+data class LinkMetadata(
+    val title: String?,
+    val description: String?,
+    val imageUrl: String?
+)
 
 @Singleton
 class LinkMetadataFetcher @Inject constructor() {
@@ -14,7 +18,7 @@ class LinkMetadataFetcher @Inject constructor() {
     suspend fun fetch(url: String): LinkMetadata = withContext(Dispatchers.IO) {
         runCatching {
             val doc = Jsoup.connect(url)
-                .userAgent("Mozilla/5.0 (Android) Sortd/0.1")
+                .userAgent("Mozilla/5.0 (Android) Sortd/1.3")
                 .timeout(8_000)
                 .followRedirects(true)
                 .get()
@@ -23,11 +27,19 @@ class LinkMetadataFetcher @Inject constructor() {
                 ?: doc.metaContent("twitter:title")
                 ?: doc.title().ifBlank { null }
 
+            val description = doc.metaContent("og:description")
+                ?: doc.metaContent("twitter:description")
+                ?: doc.metaContent("description")
+
             val image = doc.metaContent("og:image")
                 ?: doc.metaContent("twitter:image")
 
-            LinkMetadata(title?.trim()?.takeIf { it.isNotBlank() }, image?.trim()?.takeIf { it.isNotBlank() })
-        }.getOrElse { LinkMetadata(null, null) }
+            LinkMetadata(
+                title = title?.trim()?.takeIf { it.isNotBlank() },
+                description = description?.trim()?.takeIf { it.isNotBlank() },
+                imageUrl = image?.trim()?.takeIf { it.isNotBlank() }
+            )
+        }.getOrElse { LinkMetadata(null, null, null) }
     }
 
     private fun org.jsoup.nodes.Document.metaContent(property: String): String? {
